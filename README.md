@@ -32,6 +32,7 @@ Tech Stack:
 
 
 Contract Features:
+
 ✔ totalSupply
 
 The total number of CRPT tokens minted at deployment.
@@ -58,7 +59,9 @@ Enables delegated transfers using the allowance system.
 
 
 How to Run:
+
 Using Remix
+
 1] Open https://remix.ethereum.org/
 
 2] Create a new .sol file and paste the contract
