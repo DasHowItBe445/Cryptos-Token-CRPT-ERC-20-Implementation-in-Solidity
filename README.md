@@ -1,23 +1,17 @@
-# Cryptos-Token-CRPT-ERC-20-Implementation-in-Solidity
+# Cryptos ERC20 Token & ICO Smart Contract
 
-This project contains a simple and transparent implementation of an ERC-20 token written in Solidity.
-The token is named Cryptos (CRPT) and follows the essential ERC-20 standards, including balance tracking, approvals, and token transfers.
+A complete ERC20 token implementation with an Initial Coin Offering (ICO) built using Solidity.
+This project demonstrates how a cryptocurrency token can be created, distributed via an ICO, and safely traded after a defined lock-in period.
 
-About the Project:
+Project Overview:
 
-This contract demonstrates the core mechanics behind ERC-20 tokens-
+This project consists of two smart contracts:
 
-- Managing a total supply
+1] Cryptos – A basic ERC20-compliant token contract
 
-- Tracking user balances
+2] CryptosICO – An ICO (Initial Coin Offering) contract that manages token sales, investment rules, and trading restrictions
 
-- Secure token transfers
-
-- allowance / approve mechanism for delegated transfers
-
-- Emitting Transfer and Approval events
-
-The purpose of this project is to understand how ERC-20 tokens function internally and gain hands-on experience in smart contract development.
+The goal of this project is to learn and implement ERC20 tokens from scratch, understand allowances and transfers, and design a time-based ICO lifecycle.
 
 
 Tech Stack:
@@ -31,54 +25,159 @@ Tech Stack:
 4] Metamask 
 
 
-Contract Features:
+Smart Contract Architecture:
 
-✔ totalSupply
+1] Cryptos (ERC20 Token Contract)
 
-The total number of CRPT tokens minted at deployment.
+This contract implements the core ERC20 functionality.
 
-✔ balanceOf()
+Token Details-
 
-Returns the token balance of any address.
+- Token Name: Cryptos
 
-✔ transfer()
+- Symbol: CRPT
 
-Allows users to send CRPT tokens directly to another address.
+- Decimals: 0 (kept simple for learning)
 
-✔ approve()
+- Total Supply: 1,000,000 tokens
 
-Authorizes another address to spend tokens on behalf of the owner.
+- Founder: Deployer of the contract
 
-✔ allowance()
+Key Features-
 
-Checks how many tokens a spender is allowed to use.
+- Token balance tracking using mappings
 
-✔ transferFrom()
+- Token transfers between accounts
 
-Enables delegated transfers using the allowance system.
+- Allowance mechanism (approve + transferFrom)
+
+- Emits standard ERC20 events (Transfer, Approval)
+
+Core Functions-
+
+transfer() – Transfers tokens from sender to receiver
+
+approve() – Allows a spender to use tokens on behalf of the owner
+
+transferFrom() – Enables delegated token transfers
+
+balanceOf() – Returns token balance of an address
+
+2] CryptosICO (ICO Contract)
+
+This contract extends the ERC20 token and manages the token sale lifecycle.
+
+ICO Workflow:
+
+The ICO goes through four states:
+| State         | Description                             |
+| ------------- | --------------------------------------- |
+| `beforeStart` | ICO has not started                     |
+| `running`     | ICO is active and accepting investments |
+| `afterEnd`    | ICO is finished                         |
+| `halted`      | ICO paused by admin                     |
 
 
-How to Run:
+Investment Rules:
 
-Using Remix
+- Token Price: 0.001 ETH per token
 
-1] Open https://remix.ethereum.org/
+- Hard Cap: 300 ETH
 
-2] Create a new .sol file and paste the contract
+- Minimum Investment: 0.01 ETH
 
-3] Compile using Solidity 0.8.x
+- Maximum Investment: 5 ETH
 
-4] Deploy using Injected Provider or Remix VM
+- ICO Duration: 30 days
 
-5] Interact with the contract functions
+- Token Trading Start: 1 day after ICO ends
 
 
-Future Enhancements:
+Trading Lock Mechanism:
 
-- Add token minting and burning functions
+Token transfers are disabled during the ICO.
+Trading is enabled only after tokenTradeStart.
 
-- Add OpenZeppelin security standards
+This prevents:
 
-- Build a frontend to interact with the token
+- Premature trading
 
-- Deploy CRPT token to a public testnet
+- Market manipulation during token sale
+
+Investing in the ICO:
+
+Investors can buy tokens by-
+
+- Calling invest()
+
+- Sending ETH directly to the contract (via receive())
+
+Tokens are-
+
+- Calculated based on ETH sent
+
+- Transferred from the founder’s balance
+
+- ETH is forwarded to the deposit address
+
+Token Burn Mechanism:
+
+After the ICO ends-
+
+- Remaining unsold tokens held by the founder can be burned
+
+- This helps control token supply
+
+```
+function burn() public returns(bool)
+```
+
+Admin Controls:
+
+Only the admin (contract deployer) can-
+
+- Halt the ICO
+
+- Change deposit address
+
+This ensures controlled execution of critical operations.
+
+Security Considerations:
+
+1. Uses Solidity 0.8.x (built-in overflow protection)
+
+2. Time-based state validation for ICO phases
+
+3. Investment limits enforced
+
+4. Trading locked until ICO completion
+
+⚠️ This project is for learning and demonstration purposes and has not been audited for production use.
+
+Learning Outcomes:
+
+Through this project, you’ll understand-
+
+- ERC20 token mechanics
+
+- Allowances and delegated transfers
+
+- ICO state machines
+
+- Token sale economics
+
+- Solidity inheritance and overrides
+
+- Time-based access control
+
+Future Improvements:
+
+- Add SafeMath (educational)
+
+- Add pausable token transfers
+
+- Add whitelist for investors
+
+- Add refund mechanism
+
+- Integrate with frontend (Web3 / ethers.js)
