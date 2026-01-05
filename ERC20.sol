@@ -17,12 +17,11 @@ interface ERC20Interface{
 contract Cryptos is ERC20Interface{
     string public name = "Cryptos";
     string public symbol = "CRPT";
-    uint public decimal = 0; //18 normally used but 0 here for simplicity
+    uint public decimal = 0;
     uint public override totalSupply;
 
     address public founder;
-    mapping (address => uint) public balances; //balances[0x111...] = 100
-
+    mapping (address => uint) public balances;
     mapping(address => mapping(address => uint)) allowed;
 
     constructor(){
@@ -35,7 +34,7 @@ contract Cryptos is ERC20Interface{
         return balances[tokenOwner];
     }
 
-    function transfer(address to, uint tokens) public override returns(bool success){
+    function transfer(address to, uint tokens) public virtual override returns(bool success){
         require(balances[msg.sender] >= tokens);
 
         balances[to] += tokens;
@@ -45,7 +44,7 @@ contract Cryptos is ERC20Interface{
         return true;
     }
 
-    function allowance(address tokenOwner, address spender) view public override returns (uint){
+    function allowance(address tokenOwner, address spender) public view override returns (uint){
         return allowed[tokenOwner][spender];
     }
 
@@ -54,19 +53,116 @@ contract Cryptos is ERC20Interface{
         require(tokens > 0);
 
         allowed[msg.sender][spender] = tokens;
-
         emit Approval(msg.sender, spender, tokens);
         return true;
     }
 
-    function transferFrom(address from, address to, uint tokens) external returns (bool success){
+    function transferFrom(address from, address to, uint tokens) public virtual override returns (bool success){
         require(allowed[from][msg.sender] >= tokens);
         require(balances[from] >= tokens);
+
         balances[from] -= tokens;
         allowed[from][msg.sender] -= tokens;
         balances[to] += tokens;
 
         emit Transfer(from, to, tokens);
+        return true;
+    }
+}
+
+contract CryptosICO is Cryptos{
+    address public admin;
+    address payable public deposit;
+
+    uint tokenPrice = 0.001 ether;
+    uint public hardCap = 300 ether;
+    uint public raisedAmount;
+
+    uint public salesStart = block.timestamp;
+    uint public salesEnd = salesStart + 30 days;
+    uint public tokenTradeStart = salesEnd + 1 days;
+
+    uint public maxInvestment = 5 ether;
+    uint public minInvestment = 0.01 ether;
+
+    enum State {beforeStart, running, afterEnd, halted}
+    State public icoState;
+
+    constructor(address payable _deposit){
+        deposit = _deposit;
+        admin = msg.sender;
+        icoState = State.beforeStart;
+    }
+
+    modifier onlyAdmin(){
+        require(msg.sender == admin);
+        _;
+    }
+
+    function halt() public onlyAdmin{
+        icoState = State.halted;
+    }
+
+    function changeDepositAddress(address payable newDeposit) public onlyAdmin{
+        deposit = newDeposit;
+    }
+
+    function getCurrentState() public view returns (State){
+        if(icoState == State.halted){
+            return State.halted;
+        }
+        else if(block.timestamp < salesStart){
+            return State.beforeStart;
+        }
+        else if(block.timestamp >= salesStart && block.timestamp <= salesEnd){
+            return State.running;
+        }
+        else{
+            return State.afterEnd;
+        }
+    }
+
+    event Invest(address investor, uint value, uint tokens);
+
+    function invest() public payable returns(bool){
+        icoState = getCurrentState();
+        require(icoState == State.running);
+
+        require(msg.value >= minInvestment && msg.value <= maxInvestment);
+
+        raisedAmount += msg.value;
+        require(raisedAmount <= hardCap);
+
+        uint tokens = msg.value / tokenPrice;
+
+        balances[msg.sender] += tokens;
+        balances[founder] -= tokens;
+
+        deposit.transfer(msg.value);
+        emit Invest(msg.sender, msg.value, tokens);
+
+        return true;
+    }
+
+    receive() external payable{
+        invest();
+    }
+
+    function transfer(address to, uint tokens) public override returns(bool success){
+        require(block.timestamp > tokenTradeStart);
+        Cryptos.transfer(to, tokens); // Can use "super" which is to refer to the base contract
+        return true;        
+    }
+
+    function transferFrom(address from, address to, uint tokens) public override returns (bool success){
+        require(block.timestamp > tokenTradeStart);
+        return super.transferFrom(from, to, tokens);
+    }
+
+    function burn() public returns(bool){
+        icoState = getCurrentState();
+        require(icoState == State.afterEnd);
+        balances[founder] = 0;
         return true;
     }
 }
